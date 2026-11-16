@@ -19,6 +19,13 @@
     </description>
 
     <dependencies>
+        <!-- 依赖 system 模块：复用 OAuth2TokenService 签发 C 端令牌、用户/权限基础能力 -->
+        <dependency>
+            <groupId>cn.iocoder.boot</groupId>
+            <artifactId>yudao-module-system</artifactId>
+            <version>${revision}</version>
+        </dependency>
+
         <!-- 业务组件：多租户 -->
         <dependency>
             <groupId>cn.iocoder.boot</groupId>

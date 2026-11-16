@@ -348,6 +348,16 @@ yudao:
       - /admin-api/system/user/profile/**
       - /admin-api/system/auth/**
     ignore-tables:
+      # 觅搭业务表：学习项目单租户，忽略多租户过滤（无 tenant_id 列）
+      - sys_user
+      - auth_record
+      - mate_demand
+      - mate_signup
+      - mate_like
+      - mate_match
+      - risk_report
+      - risk_event
+      - risk_blacklist
     ignore-caches:
       - user_role_ids
       - permission_menu_ids
