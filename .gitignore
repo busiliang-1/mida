@@ -1,0 +1,39 @@
+# ---- Maven / Java ----
+target/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+hs_err_pid*
+
+# ---- IDE ----
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.project
+.classpath
+.factorypath
+
+# ---- Node / 前端 ----
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# ---- 日志 / 运行数据 ----
+logs/
+*.log
+data/uploads/
+data/redis/
+
+# ---- OS ----
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- 临时 / 备份 ----
+*.bak
+*.tmp
+*.swp
