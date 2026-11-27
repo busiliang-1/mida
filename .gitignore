@@ -40,3 +40,7 @@ desktop.ini
 
 # ---- 本机敏感配置（含数据库密码，不入库；用 example 模板代替）----
 ruoyi-vue-pro/yudao-server/src/main/resources/application-local.yaml
+
+# Python 编译缓存
+__pycache__/
+*.pyc
