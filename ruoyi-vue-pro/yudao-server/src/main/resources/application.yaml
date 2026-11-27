@@ -342,7 +342,12 @@ yudao:
     unit-test-enable: false # 是否生成单元测试
     import-enable: false # 是否生成 Excel 导入接口
   mate: # 觅搭业务配置
-    internal-token: mida-internal-dev-token # 内部接口共享密钥：请求头 X-Internal-Token（#32 IM 回调 / #48 对账差错 / #58 审核队列）
+    # 内部接口共享密钥（请求头 X-Internal-Token，保护 #32 IM 校验 / #48 对账差错 / #58 审核队列）。
+    # 不设默认值：未注入环境变量时内部接口一律拒绝，避免"漏配 = 无鉴权"。
+    internal-token: ${MIDA_INTERNAL_TOKEN:}
+    pay:
+      # Mock 支付回调验签密钥（HMAC-SHA256）。同样不设默认值，未配置时验签一律失败。
+      mock-secret: ${MIDA_PAY_MOCK_SECRET:}
   tenant: # 多租户相关配置项
     enable: true
     ignore-urls:

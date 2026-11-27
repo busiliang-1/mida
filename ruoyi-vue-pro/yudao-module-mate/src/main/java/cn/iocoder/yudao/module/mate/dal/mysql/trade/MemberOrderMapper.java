@@ -6,6 +6,7 @@ import cn.iocoder.yudao.module.mate.dal.dataobject.trade.MemberOrderDO;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Mapper
 public interface MemberOrderMapper extends BaseMapperX<MemberOrderDO> {
@@ -23,5 +24,13 @@ public interface MemberOrderMapper extends BaseMapperX<MemberOrderDO> {
                 .eq(MemberOrderDO::getStatus, 2)
                 .gt(MemberOrderDO::getExpireAt, now)
                 .orderByDesc(MemberOrderDO::getExpireAt));
+    }
+
+    /** 对账用：取时段内已生效的订单（本地侧账本） */
+    default List<MemberOrderDO> selectPaidBetween(LocalDateTime from, LocalDateTime to) {
+        return selectList(new LambdaQueryWrapperX<MemberOrderDO>()
+                .eq(MemberOrderDO::getStatus, 2)
+                .ge(MemberOrderDO::getPaidAt, from)
+                .lt(MemberOrderDO::getPaidAt, to));
     }
 }

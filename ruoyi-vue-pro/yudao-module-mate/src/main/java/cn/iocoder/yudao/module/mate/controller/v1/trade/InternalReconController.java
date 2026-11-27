@@ -4,11 +4,11 @@ import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import cn.iocoder.yudao.module.mate.dal.dataobject.trade.ReconDiffDO;
 import cn.iocoder.yudao.module.mate.dal.mysql.trade.ReconDiffMapper;
 import cn.iocoder.yudao.module.mate.framework.web.CursorResult;
+import cn.iocoder.yudao.module.mate.framework.web.InternalTokenGuard;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import jakarta.annotation.security.PermitAll;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -24,7 +24,6 @@ import java.util.List;
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
 import static cn.iocoder.yudao.module.mate.enums.ErrorCodeConstants.RESOURCE_OWNER_MISMATCH;
-import static cn.iocoder.yudao.module.mate.enums.ErrorCodeConstants.UNAUTHORIZED;
 
 /**
  * 内部接口 #48：对账差错工单（GET 列表 + PATCH 处置），共享密钥头保护。
@@ -39,9 +38,8 @@ public class InternalReconController {
 
     @Resource
     private ReconDiffMapper reconDiffMapper;
-
-    @Value("${yudao.mate.internal-token:mida-internal-dev-token}")
-    private String internalToken;
+    @Resource
+    private InternalTokenGuard internalTokenGuard;
 
     public record ReconDiffVO(Long id, String diffNo, String bizNo, BigDecimal localAmount,
                               BigDecimal channelAmount, Integer type, Integer status) {
@@ -93,9 +91,7 @@ public class InternalReconController {
     }
 
     private void assertInternal(String token) {
-        if (token == null || !token.equals(internalToken)) {
-            throw exception(UNAUTHORIZED);
-        }
+        internalTokenGuard.check(token);
     }
 
     private Long parseCursor(String cursor) {

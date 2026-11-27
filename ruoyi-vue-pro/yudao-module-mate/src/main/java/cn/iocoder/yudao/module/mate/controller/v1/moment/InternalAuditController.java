@@ -2,6 +2,7 @@ package cn.iocoder.yudao.module.mate.controller.v1.moment;
 
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import cn.iocoder.yudao.module.mate.framework.web.CursorResult;
+import cn.iocoder.yudao.module.mate.framework.web.InternalTokenGuard;
 import cn.iocoder.yudao.module.mate.service.moment.MomentAuditService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -11,7 +12,6 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,9 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
-import static cn.iocoder.yudao.module.mate.enums.ErrorCodeConstants.UNAUTHORIZED;
 
 /**
  * 内部接口 #58：内容审核队列（GET）+ 处置（PUT）。
@@ -41,9 +39,8 @@ public class InternalAuditController {
 
     @Resource
     private MomentAuditService momentAuditService;
-
-    @Value("${yudao.mate.internal-token:mida-internal-dev-token}")
-    private String internalToken;
+    @Resource
+    private InternalTokenGuard internalTokenGuard;
 
     public record AuditItemVO(String bizType, Long bizId, Long userId, String content,
                               Integer auditStatus, LocalDateTime createTime) {
@@ -85,8 +82,6 @@ public class InternalAuditController {
     }
 
     private void assertInternal(String token) {
-        if (token == null || !token.equals(internalToken)) {
-            throw exception(UNAUTHORIZED);
-        }
+        internalTokenGuard.check(token);
     }
 }

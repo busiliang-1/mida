@@ -18,6 +18,12 @@
             im(M3 通讯) / trade(M4 交易会员) / content(M5 内容) / goods(M7 二手) —— 后端乙
     </description>
 
+    <properties>
+        <!-- 覆盖率不在此处配置 argLine：
+             本项目 surefire 用 JarManifestForkConfiguration 启动 fork，pom 里的 argLine 传不进去，
+             只能在命令行用 -DargLine 注入。见 scripts/coverage.sh -->
+    </properties>
+
     <dependencies>
         <!-- 依赖 system 模块：复用 OAuth2TokenService 签发 C 端令牌、用户/权限基础能力 -->
         <dependency>
@@ -82,5 +88,27 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <!-- 覆盖率门禁：mvn test 后生成 target/site/jacoco/index.html。
+                 prepare-agent 把 agent 参数写进自定义属性 surefireArgLine，
+                 再由下面的 surefire 用 @{...} 延迟求值注入——直接改 argLine 在本项目不生效。 -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.12</version>
+                <executions>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

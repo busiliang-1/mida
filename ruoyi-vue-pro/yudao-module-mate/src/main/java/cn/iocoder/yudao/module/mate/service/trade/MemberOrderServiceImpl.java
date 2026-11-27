@@ -7,9 +7,11 @@ import cn.iocoder.yudao.module.mate.dal.dataobject.trade.TradePayNotifyDO;
 import cn.iocoder.yudao.module.mate.dal.mysql.trade.MemberOrderMapper;
 import cn.iocoder.yudao.module.mate.dal.mysql.trade.TradePayNotifyMapper;
 import cn.iocoder.yudao.module.mate.enums.trade.MemberPackageEnum;
+import cn.iocoder.yudao.module.mate.event.MemberOrderPaidEvent;
 import cn.iocoder.yudao.module.mate.framework.trade.MockPayChannel;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,6 +52,8 @@ public class MemberOrderServiceImpl implements MemberOrderService {
     private MemberBenefitService memberBenefitService;
     @Resource
     private MockPayChannel payChannel;
+    @Resource
+    private ApplicationEventPublisher eventPublisher;
 
     @Override
     public List<PackageItem> listPackages() {
@@ -168,6 +172,12 @@ public class MemberOrderServiceImpl implements MemberOrderService {
         if (order.getOrderType() != null && order.getOrderType() == 1 && pkg != null) {
             memberBenefitService.issue(order.getUserId(), order.getOrderNo(), pkg.getBenefits(), expireAt);
         }
+
+        // 契约 order.paid：广播给 M6 做信用分/统计。权益已在上面同事务发放，事件不承担发权益的职责，
+        // 因此即便消费者抛异常也不影响订单生效——发布放在最后，且只广播不回调
+        eventPublisher.publishEvent(new MemberOrderPaidEvent(
+                order.getOrderNo(), order.getOrderNo(), order.getUserId(),
+                cmd.amount(), order.getOrderType(), update.getPaidAt()));
     }
 
     @Override
