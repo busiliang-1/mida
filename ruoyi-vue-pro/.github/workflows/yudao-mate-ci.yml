@@ -1,0 +1,204 @@
+# 觅搭 · CI 流水线（质量门禁）
+#
+# 与原 maven.yml 的差别：原文件只做 `mvn package -Dmaven.test.skip=true`，
+# 即「编译通过就算绿」，单测一条没跑，且只在 master 系列分支触发，dev 推代码根本不跑。
+# 本文件把它换成真正的门禁。
+#
+# 四道闸门：
+#   1. 编译 + 单元测试（跳过测试直接红）
+#   2. 覆盖率（JaCoCo，核心模块有下限）
+#   3. 架构守护（ArchUnit：禁止跨模块 import）
+#   4. 契约漂移（源码注解 ≠ contract/openapi.yaml 即红）
+#
+# 触发：dev / main / feat/** / fix/** 的 push，以及指向这些分支的 PR。
+
+name: 质量门禁
+
+on:
+  push:
+    branches: [ dev, main, 'feat/**', 'fix/**' ]
+  pull_request:
+    branches: [ dev, main ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # 与根 pom.xml 的 properties/java.version 保持一致
+  JAVA_VERSION: '17'
+  MODULE: yudao-module-mate
+
+jobs:
+  # ─────────────────────────────────────────────────────────────
+  # 1. 编译 + 单测 + 覆盖率
+  # ─────────────────────────────────────────────────────────────
+  test:
+    name: 编译与单测
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 设置 JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+          cache-dependency-path: '**/pom.xml'
+
+      - name: 解析根 pom 的 java.version（缺失即失败）
+        id: jdk
+        working-directory: ruoyi-vue-pro
+        run: |
+          python3 -I - <<'EOF' >> "$GITHUB_OUTPUT"
+          import xml.etree.ElementTree as ET
+          ns = {'m': 'http://maven.apache.org/POM/4.0.0'}
+          v = (ET.parse('pom.xml').getroot().findtext('m:properties/m:java.version', namespaces=ns) or '').strip().removeprefix('1.')
+          if not v.isdigit():
+              raise SystemExit(f'根 pom.xml 的 properties/java.version 缺失或无效: {v!r}')
+          print(f'version={v}')
+          EOF
+
+      - name: 校验 JDK 与 pom 一致
+        working-directory: ruoyi-vue-pro
+        run: |
+          if [ "${{ steps.jdk.outputs.version }}" != "${{ env.JAVA_VERSION }}" ]; then
+            echo "::error::pom.xml 要求 JDK ${{ steps.jdk.outputs.version }}，但 CI 配置是 ${{ env.JAVA_VERSION }}"
+            exit 1
+          fi
+
+      - name: 编译（含依赖模块）
+        working-directory: ruoyi-vue-pro
+        run: mvn -B -pl $MODULE -am -DskipTests install
+
+      - name: 自附加能力自检（Mockito 依赖此项）
+        id: attach
+        working-directory: ruoyi-vue-pro
+        # mockito-inline 靠 ByteBuddy 自附加当前 JVM 来 mock final 类。
+        # 部分受限环境（禁外部进程、只读 /tmp）会失败，此时所有 @Mock 测试会报
+        # "Could not self-attach to current VM"。
+        # 先把这种情况识别出来，避免把环境问题误报成代码缺陷。
+        run: |
+          mkdir -p /tmp/attach
+          printf '%s\n' \
+            'public class AttachCheck {' \
+            '    public static void main(String[] a) {' \
+            '        try {' \
+            '            Class<?> c = Class.forName("com.sun.tools.attach.VirtualMachine");' \
+            '            Object vm = c.getMethod("attach", String.class)' \
+            '                    .invoke(null, String.valueOf(ProcessHandle.current().pid()));' \
+            '            c.getMethod("detach").invoke(vm);' \
+            '            System.out.println("ATTACH_OK");' \
+            '        } catch (Throwable t) {' \
+            '            System.out.println("ATTACH_FAILED: " + t);' \
+            '        }' \
+            '    }' \
+            '}' > /tmp/attach/AttachCheck.java
+          javac -d /tmp/attach /tmp/attach/AttachCheck.java
+          RESULT=$(java -cp /tmp/attach AttachCheck)
+          echo "result=$RESULT"
+          if echo "$RESULT" | grep -q ATTACH_OK; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 单元测试
+        working-directory: ruoyi-vue-pro
+        # 不写 -DskipTests / -Dmaven.test.skip，测试失败即断
+        run: mvn -B -pl $MODULE surefire:test
+
+      - name: 环境异常提示
+        if: failure() && steps.attach.outputs.ok != 'true'
+        run: |
+          echo "::warning::当前 runner 不支持 JVM 自附加，Mockito 相关测试无法执行。" \
+               "这是环境限制，不是代码缺陷。请换标准 runner 或在有权限的环境重跑。"
+
+      - name: 生成覆盖率报告
+        if: always()
+        working-directory: ruoyi-vue-pro
+        run: mvn -B -pl $MODULE jacoco:report
+        continue-on-error: true
+
+      - name: 覆盖率门禁
+        working-directory: ruoyi-vue-pro
+        run: |
+          REPORT="$MODULE/target/site/jacoco/jacoco.csv"
+          if [ ! -f "$REPORT" ]; then
+            echo "::error::未生成覆盖率报告 $REPORT，评分判缺失"
+            exit 1
+          fi
+          python3 ../scripts/ci/check_coverage.py "$REPORT"
+
+      - name: 上传测试报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: |
+            ruoyi-vue-pro/${{ env.MODULE }}/target/surefire-reports/
+            ruoyi-vue-pro/${{ env.MODULE }}/target/site/jacoco/
+          retention-days: 7
+          if-no-files-found: warn
+
+  # ─────────────────────────────────────────────────────────────
+  # 2. 架构守护（ArchUnit）
+  # ─────────────────────────────────────────────────────────────
+  arch:
+    name: 架构守护
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 设置 JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+          cache-dependency-path: '**/pom.xml'
+
+      - name: 编译
+        working-directory: ruoyi-vue-pro
+        run: mvn -B -pl $MODULE -am -DskipTests install
+
+      - name: 运行 ArchUnit 规则
+        working-directory: ruoyi-vue-pro
+        run: mvn -B -pl $MODULE test -Dtest=MateArchitectureTest -DfailIfNoTests=true
+
+  # ─────────────────────────────────────────────────────────────
+  # 3. 契约漂移检测
+  # ─────────────────────────────────────────────────────────────
+  contract:
+    name: 契约漂移检测
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 安装 yaml 依赖
+        run: pip install pyyaml
+
+      - name: 重新生成契约并与提交版本比对
+        run: python3 scripts/ci/check_contract.py
+
+  # ─────────────────────────────────────────────────────────────
+  # 4. 前置脚本自检（改了脚本本身的语法错误要能被发现）
+  # ─────────────────────────────────────────────────────────────
+  scripts:
+    name: 脚本语法检查
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: 语法编译
+        run: |
+          python3 -m py_compile scripts/*.py scripts/ci/*.py
+          echo "脚本语法 OK"
