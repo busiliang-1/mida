@@ -44,3 +44,6 @@ ruoyi-vue-pro/yudao-server/src/main/resources/application-local.yaml
 # Python 编译缓存
 __pycache__/
 *.pyc
+
+# 本地测试报告（scripts/report.py 生成的静态页面）
+reports/
