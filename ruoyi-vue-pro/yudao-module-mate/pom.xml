@@ -38,6 +38,13 @@
             <artifactId>yudao-spring-boot-starter-security</artifactId>
         </dependency>
 
+        <!-- WebSocket / STOMP：M3 在线直推。用 Spring 原生 STOMP（Principal 由拦截至 token 解析），
+             不复用 yudao-spring-boot-starter-websocket 的 JSON 通道，避免与 /infra/ws 的 Handler 冲突 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+
         <!-- DB -->
         <dependency>
             <groupId>cn.iocoder.boot</groupId>
