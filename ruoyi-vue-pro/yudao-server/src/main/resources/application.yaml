@@ -304,6 +304,7 @@ yudao:
   security:
     permit-all_urls:
       - /admin-api/mp/open/** # 微信公众号开放平台，微信回调接口，不需要登录
+      - /ws/** # M3 STOMP 握手：令牌由 ImHandshakeInterceptor 自行校验（WS 无法带自定义 Header 时用 ?token=）
   api-encrypt:
     enable: false # 是否开启 API 加密。默认关闭，避免低版本 JDK 8（8u120 以下）启动时 bcprov 的 JCE 认证报错
     algorithm: AES # 加密算法，支持 AES、RSA 等
@@ -340,6 +341,13 @@ yudao:
     delete-batch-enable: true # 是否生成批量删除接口
     unit-test-enable: false # 是否生成单元测试
     import-enable: false # 是否生成 Excel 导入接口
+  mate: # 觅搭业务配置
+    # 内部接口共享密钥（请求头 X-Internal-Token，保护 #32 IM 校验 / #48 对账差错 / #58 审核队列）。
+    # 不设默认值：未注入环境变量时内部接口一律拒绝，避免"漏配 = 无鉴权"。
+    internal-token: ${MIDA_INTERNAL_TOKEN:}
+    pay:
+      # Mock 支付回调验签密钥（HMAC-SHA256）。同样不设默认值，未配置时验签一律失败。
+      mock-secret: ${MIDA_PAY_MOCK_SECRET:}
   tenant: # 多租户相关配置项
     enable: true
     ignore-urls:
@@ -358,6 +366,33 @@ yudao:
       - risk_report
       - risk_event
       - risk_blacklist
+      # 后端乙 M3 即时通讯（5 张）
+      - im_session
+      - im_message
+      - im_session_member
+      - im_blacklist
+      - notify_record
+      # 后端乙 M4 交易与会员（8 张）
+      - wallet_account
+      - wallet_transfer
+      - wallet_flow
+      - trade_split_order
+      - member_order
+      - member_benefit
+      - trade_pay_notify
+      - recon_diff
+      # 后端乙 M5 内容社区（7 张）
+      - moment_post
+      - moment_attachment
+      - moment_like
+      - moment_comment
+      - moment_collect
+      - user_follow
+      - homepage_config
+      # 后端乙 M7 二手交易（3 张）
+      - goods_item
+      - goods_order
+      - goods_category
     ignore-caches:
       - user_role_ids
       - permission_menu_ids
