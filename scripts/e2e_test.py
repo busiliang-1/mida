@@ -218,10 +218,12 @@ def pay_callback(event_id, status="SUCCESS", sign=b"wrong"):
             "occurred_at": datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")}
     return req("POST", "/api/v1/payment-callbacks", body, headers={"Signature": sign.decode()}), trade_no
 
-bad, trade_no = pay_callback("EV-BAD")
+bad, _ = pay_callback("EV-BAD")
 check("错误签名回调被拒(5001)", bad.get("code") == 5001, bad)
 
-canonical = "%s|%s|%s|%.2f|SUCCESS" % ("EV-OK", order_no, trade_no, float(amount))
+# 注意：签名必须用"本次真正提交"的 trade_no 计算，否则服务端规范串对不上
+trade_no_ok = "TRADE-EV-OK"
+canonical = "%s|%s|%s|%.2f|SUCCESS" % ("EV-OK", order_no, trade_no_ok, float(amount))
 good_sign = hmac.new(b"mock-pay-secret", canonical.encode(), hashlib.sha256).hexdigest()
 ok1, _ = pay_callback("EV-OK", sign=good_sign.encode())
 check("正确签名回调成功", ok1.get("code") == 0, ok1)
@@ -265,7 +267,7 @@ check("审核通过后进入信息流", any(x["postId"] == post_id for x in feed
 lk1 = req("POST", f"/api/v1/posts/{post_id}/likes", None, tokB)
 check("B 点赞 likeCount=1", lk1.get("code") == 0 and lk1["data"]["likeCount"] == 1, lk1)
 lk2 = req("POST", f"/api/v1/posts/{post_id}/likes", None, tokB)
-check("重复点赞仍为 1（唯一键防重）", lk2["data"]["likeCount"] == 1, lk2)
+check("重复点赞仍为 1（唯一键防重）", (lk2.get("data") or {}).get("likeCount") == 1, lk2)
 lk3 = req("DELETE", f"/api/v1/posts/{post_id}/likes", None, tokB)
 check("取消点赞归 0", lk3["data"]["likeCount"] == 0, lk3)
 

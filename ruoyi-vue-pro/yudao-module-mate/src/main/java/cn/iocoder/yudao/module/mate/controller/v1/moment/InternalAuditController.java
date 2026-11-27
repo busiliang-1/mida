@@ -6,6 +6,7 @@ import cn.iocoder.yudao.module.mate.service.moment.MomentAuditService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
+import jakarta.annotation.security.PermitAll;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -56,6 +57,7 @@ public class InternalAuditController {
 
     @GetMapping
     @Operation(summary = "内容审核队列（待审 + 转人工）")
+    @PermitAll
     public CommonResult<CursorResult<AuditItemVO>> queue(
             @RequestHeader(value = "X-Internal-Token", required = false) String token,
             @RequestParam(required = false) Integer status,
@@ -72,6 +74,7 @@ public class InternalAuditController {
 
     @PutMapping("/{id}")
     @Operation(summary = "处置内容：action=1 通过 / 2 驳回")
+    @PermitAll
     public CommonResult<DisposeRespVO> dispose(
             @RequestHeader(value = "X-Internal-Token", required = false) String token,
             @PathVariable("id") Long id,
