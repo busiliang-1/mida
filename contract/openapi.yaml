@@ -1,0 +1,1730 @@
+# 觅搭 · 契约 v1（自动生成，勿手改）
+#
+# 生成器：scripts/gen_contract.py
+# 来源：yudao-module-mate 控制器源码注解（方法级 @RequireAuthLevel 优先于类级）
+#
+# 重新生成：python scripts/gen_contract.py
+# CI 会校验「源码注解 == 本文件」，不一致即失败，防止契约漂移。
+
+openapi: 3.0.3
+info:
+  title: 觅搭 API 契约
+  version: 1.0.0
+  description: >
+    契约 v1。路由前缀：乙侧 /api/v1，甲侧 /app-api/mate + /admin-api/mate，
+    内部 /internal/v1。错误码见 contract/error-codes.md，事件见 contract/events.md。
+servers:
+  - url: http://127.0.0.1:48080
+    description: 本地联调
+
+tags:
+  - name: "M1 用户认证"
+  - name: "M1 用户认证(后台)"
+  - name: "M2 搭子匹配"
+  - name: "M3 即时通讯"
+  - name: "M3 即时通讯(内部)"
+  - name: "M4 交易"
+  - name: "M4 交易(内部)"
+  - name: "M5 动态"
+  - name: "M5 动态(内部)"
+  - name: "M6 风控"
+  - name: "M6 风控(后台)"
+  - name: "M7 二手"
+
+paths:
+  "/admin-api/mate/auth-record/page":
+    get:
+      tags: ["M1 用户认证(后台)"]
+      summary: "认证审核队列"
+      operationId: "AdminAuthRecordController_GET_admin-api_mate_auth-record_page"
+      x-module: "M1"
+      x-auth: "bearer"
+      x-idempotent: false
+      responses:
+        '200':
+          description: "认证审核队列"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/admin-api/mate/auth-record/review":
+    put:
+      tags: ["M1 用户认证(后台)"]
+      summary: "审核认证记录(通过/驳回)"
+      operationId: "AdminAuthRecordController_PUT_admin-api_mate_auth-record_review"
+      x-module: "M1"
+      x-auth: "bearer"
+      x-idempotent: false
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "审核认证记录(通过/驳回)"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/admin-api/mate/risk/audit/check":
+    post:
+      tags: ["M6 风控(后台)"]
+      summary: "敏感词命中测试"
+      operationId: "AdminRiskController_POST_admin-api_mate_risk_audit_check"
+      x-module: "M6"
+      x-auth: "bearer"
+      x-idempotent: false
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "敏感词命中测试"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/admin-api/mate/risk/audit/dict-version":
+    get:
+      tags: ["M6 风控(后台)"]
+      summary: "敏感词库版本"
+      operationId: "AdminRiskController_GET_admin-api_mate_risk_audit_dict-version"
+      x-module: "M6"
+      x-auth: "bearer"
+      x-idempotent: false
+      responses:
+        '200':
+          description: "敏感词库版本"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/admin-api/mate/risk/audit/reload":
+    post:
+      tags: ["M6 风控(后台)"]
+      summary: "热加载新增敏感词"
+      operationId: "AdminRiskController_POST_admin-api_mate_risk_audit_reload"
+      x-module: "M6"
+      x-auth: "bearer"
+      x-idempotent: false
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "热加载新增敏感词"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/admin-api/mate/risk/blacklist/add":
+    post:
+      tags: ["M6 风控(后台)"]
+      summary: "加入黑名单"
+      operationId: "AdminRiskController_POST_admin-api_mate_risk_blacklist_add"
+      x-module: "M6"
+      x-auth: "bearer"
+      x-idempotent: false
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "加入黑名单"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/admin-api/mate/risk/blacklist/remove":
+    delete:
+      tags: ["M6 风控(后台)"]
+      summary: "移出黑名单"
+      operationId: "AdminRiskController_DELETE_admin-api_mate_risk_blacklist_remove"
+      x-module: "M6"
+      x-auth: "bearer"
+      x-idempotent: false
+      responses:
+        '200':
+          description: "移出黑名单"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/admin-api/mate/risk/event/list":
+    get:
+      tags: ["M6 风控(后台)"]
+      summary: "风险事件审计"
+      operationId: "AdminRiskController_GET_admin-api_mate_risk_event_list"
+      x-module: "M6"
+      x-auth: "bearer"
+      x-idempotent: false
+      responses:
+        '200':
+          description: "风险事件审计"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/admin-api/mate/risk/report/page":
+    get:
+      tags: ["M6 风控(后台)"]
+      summary: "举报工单队列"
+      operationId: "AdminRiskController_GET_admin-api_mate_risk_report_page"
+      x-module: "M6"
+      x-auth: "bearer"
+      x-idempotent: false
+      responses:
+        '200':
+          description: "举报工单队列"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/admin-api/mate/risk/report/review":
+    put:
+      tags: ["M6 风控(后台)"]
+      summary: "处置举报"
+      operationId: "AdminRiskController_PUT_admin-api_mate_risk_report_review"
+      x-module: "M6"
+      x-auth: "bearer"
+      x-idempotent: false
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "处置举报"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/admin-api/mate/risk/score":
+    post:
+      tags: ["M6 风控(后台)"]
+      summary: "风险评分(供转账准入/测试)"
+      operationId: "AdminRiskController_POST_admin-api_mate_risk_score"
+      x-module: "M6"
+      x-auth: "bearer"
+      x-idempotent: false
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "风险评分(供转账准入/测试)"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/api/v1/admin/audit-queues":
+    get:
+      tags: ["M5 动态(内部)"]
+      summary: "内容审核队列（待审 + 转人工）"
+      operationId: "InternalAuditController_GET_api_v1_admin_audit-queues"
+      x-module: "M5"
+      x-auth: "internal"
+      x-idempotent: false
+      x-internal: true
+      parameters:
+        - name: X-Internal-Token
+          in: header
+          required: true
+          description: 内部接口共享密钥；配置为空时一律拒绝(1002)
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "内容审核队列（待审 + 转人工）"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/api/v1/admin/audit-queues/{id}":
+    put:
+      tags: ["M5 动态(内部)"]
+      summary: "处置内容：action=1 通过 / 2 驳回"
+      operationId: "InternalAuditController_PUT_api_v1_admin_audit-queues_id"
+      x-module: "M5"
+      x-auth: "internal"
+      x-idempotent: false
+      x-internal: true
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: X-Internal-Token
+          in: header
+          required: true
+          description: 内部接口共享密钥；配置为空时一律拒绝(1002)
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "处置内容：action=1 通过 / 2 驳回"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/api/v1/admin/recon-diffs":
+    get:
+      tags: ["M4 交易(内部)"]
+      summary: "对账差错列表（游标）"
+      operationId: "InternalReconController_GET_api_v1_admin_recon-diffs"
+      x-module: "M4"
+      x-auth: "internal"
+      x-idempotent: false
+      x-internal: true
+      parameters:
+        - name: X-Internal-Token
+          in: header
+          required: true
+          description: 内部接口共享密钥；配置为空时一律拒绝(1002)
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "对账差错列表（游标）"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/api/v1/admin/recon-diffs/{id}":
+    patch:
+      tags: ["M4 交易(内部)"]
+      summary: "处置对账差错"
+      operationId: "InternalReconController_PATCH_api_v1_admin_recon-diffs_id"
+      x-module: "M4"
+      x-auth: "internal"
+      x-idempotent: false
+      x-internal: true
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: X-Internal-Token
+          in: header
+          required: true
+          description: 内部接口共享密钥；配置为空时一律拒绝(1002)
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "处置对账差错"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/api/v1/blacklists":
+    post:
+      tags: ["M3 即时通讯"]
+      summary: "拉黑（双向阻断）"
+      operationId: "AppImBlacklistController_POST_api_v1_blacklists"
+      x-module: "M3"
+      x-auth: "level2"
+      x-idempotent: false
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "拉黑（双向阻断）"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/api/v1/blacklists/{userId}":
+    delete:
+      tags: ["M3 即时通讯"]
+      summary: "解除拉黑"
+      operationId: "AppImBlacklistController_DELETE_api_v1_blacklists_userId"
+      x-module: "M3"
+      x-auth: "level2"
+      x-idempotent: false
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "解除拉黑"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/api/v1/cards/{cardType}/{bizNo}":
+    get:
+      tags: ["M3 即时通讯"]
+      summary: "卡片详情（服务端渲染，查不到空态）"
+      operationId: "AppImCardController_GET_api_v1_cards_cardType_bizNo"
+      x-module: "M3"
+      x-auth: "level2"
+      x-idempotent: false
+      parameters:
+        - name: cardType
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: bizNo
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "卡片详情（服务端渲染，查不到空态）"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/api/v1/feeds":
+    get:
+      tags: ["M5 动态"]
+      summary: "双列信息流（recommend/follow/school，游标分页）"
+      operationId: "AppFeedController_GET_api_v1_feeds"
+      x-module: "M5"
+      x-auth: "level1"
+      x-idempotent: false
+      responses:
+        '200':
+          description: "双列信息流（recommend/follow/school，游标分页）"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/api/v1/goods":
+    get:
+      tags: ["M7 二手"]
+      summary: "二手列表（分类筛选 + 游标）"
+      operationId: "AppGoodsController_GET_api_v1_goods"
+      x-module: "M7"
+      x-auth: "level1"
+      x-idempotent: false
+      responses:
+        '200':
+          description: "二手列表（分类筛选 + 游标）"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    post:
+      tags: ["M7 二手"]
+      summary: "挂售二手（需 L3）"
+      operationId: "AppGoodsController_POST_api_v1_goods"
+      x-module: "M7"
+      x-auth: "level3"
+      x-idempotent: true
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: 客户端生成，重试必须沿用同一个值
+          schema:
+            type: string
+            maxLength: 32
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "挂售二手（需 L3）"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/api/v1/goods-orders":
+    get:
+      tags: ["M7 二手"]
+      summary: "我的二手订单（买/卖）"
+      operationId: "AppGoodsOrderController_GET_api_v1_goods-orders"
+      x-module: "M7"
+      x-auth: "level2"
+      x-idempotent: false
+      responses:
+        '200':
+          description: "我的二手订单（买/卖）"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/api/v1/goods-orders/{id}/confirm":
+    patch:
+      tags: ["M7 二手"]
+      summary: "线下确认完成（发 goods.sold，无资金托管）"
+      operationId: "AppGoodsOrderController_PATCH_api_v1_goods-orders_id_confirm"
+      x-module: "M7"
+      x-auth: "level2"
+      x-idempotent: true
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: 客户端生成，重试必须沿用同一个值
+          schema:
+            type: string
+            maxLength: 32
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "线下确认完成（发 goods.sold，无资金托管）"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/api/v1/goods/{id}":
+    get:
+      tags: ["M7 二手"]
+      summary: "二手详情 + 卖家名片"
+      operationId: "AppGoodsController_GET_api_v1_goods_id"
+      x-module: "M7"
+      x-auth: "level1"
+      x-idempotent: false
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "二手详情 + 卖家名片"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/api/v1/goods/{id}/off":
+    patch:
+      tags: ["M7 二手"]
+      summary: "下架（仅卖家，需 L3）"
+      operationId: "AppGoodsController_PATCH_api_v1_goods_id_off"
+      x-module: "M7"
+      x-auth: "level3"
+      x-idempotent: true
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: 客户端生成，重试必须沿用同一个值
+          schema:
+            type: string
+            maxLength: 32
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "下架（仅卖家，需 L3）"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/api/v1/goods/{id}/orders":
+    post:
+      tags: ["M7 二手"]
+      summary: "二手下单（需 L2，乐观锁防重复）"
+      operationId: "AppGoodsController_POST_api_v1_goods_id_orders"
+      x-module: "M7"
+      x-auth: "level2"
+      x-idempotent: true
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: 客户端生成，重试必须沿用同一个值
+          schema:
+            type: string
+            maxLength: 32
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "二手下单（需 L2，乐观锁防重复）"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/api/v1/homepages/config":
+    put:
+      tags: ["M5 动态"]
+      summary: "更新主页配置（需 L2）"
+      operationId: "AppHomepageController_PUT_api_v1_homepages_config"
+      x-module: "M5"
+      x-auth: "level2"
+      x-idempotent: false
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "更新主页配置（需 L2）"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/api/v1/member-orders":
+    post:
+      tags: ["M4 交易"]
+      summary: "创建会员订单（返回收银台链接）"
+      operationId: "AppMemberController_POST_api_v1_member-orders"
+      x-module: "M4"
+      x-auth: "level1"
+      x-idempotent: true
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: 客户端生成，重试必须沿用同一个值
+          schema:
+            type: string
+            maxLength: 32
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "创建会员订单（返回收银台链接）"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/api/v1/member-packages":
+    get:
+      tags: ["M4 交易"]
+      summary: "会员套餐与权益列表"
+      operationId: "AppMemberController_GET_api_v1_member-packages"
+      x-module: "M4"
+      x-auth: "level1"
+      x-idempotent: false
+      responses:
+        '200':
+          description: "会员套餐与权益列表"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/api/v1/messages":
+    get:
+      tags: ["M3 即时通讯"]
+      summary: "历史消息 / 断线补齐（游标）"
+      operationId: "AppImMessageController_GET_api_v1_messages"
+      x-module: "M3"
+      x-auth: "level2"
+      x-idempotent: false
+      responses:
+        '200':
+          description: "历史消息 / 断线补齐（游标）"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    post:
+      tags: ["M3 即时通讯"]
+      summary: "发送消息（文本/图片/卡片，落库成功才算成功）"
+      operationId: "AppImMessageController_POST_api_v1_messages"
+      x-module: "M3"
+      x-auth: "level2"
+      x-idempotent: false
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "发送消息（文本/图片/卡片，落库成功才算成功）"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/api/v1/messages/{id}/recall":
+    patch:
+      tags: ["M3 即时通讯"]
+      summary: "撤回（≤2 分钟，仅本人）"
+      operationId: "AppImMessageController_PATCH_api_v1_messages_id_recall"
+      x-module: "M3"
+      x-auth: "level2"
+      x-idempotent: false
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "撤回（≤2 分钟，仅本人）"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/api/v1/orders/{no}":
+    get:
+      tags: ["M4 交易"]
+      summary: "订单状态"
+      operationId: "AppPaymentController_GET_api_v1_orders_no"
+      x-module: "M4"
+      x-auth: "level1"
+      x-idempotent: false
+      parameters:
+        - name: no
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "订单状态"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/api/v1/payment-callbacks":
+    post:
+      tags: ["M4 交易"]
+      summary: "支付回调（MockPayChannel HMAC 验签，event_id 去重）"
+      operationId: "AppPaymentController_POST_api_v1_payment-callbacks"
+      x-module: "M4"
+      x-auth: "public"
+      x-idempotent: false
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "支付回调（MockPayChannel HMAC 验签，event_id 去重）"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/api/v1/posts":
+    post:
+      tags: ["M5 动态"]
+      summary: "发动态（需 L2，进审核）"
+      operationId: "AppMomentPostController_POST_api_v1_posts"
+      x-module: "M5"
+      x-auth: "level2"
+      x-idempotent: true
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: 客户端生成，重试必须沿用同一个值
+          schema:
+            type: string
+            maxLength: 32
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "发动态（需 L2，进审核）"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/api/v1/posts/{id}":
+    get:
+      tags: ["M5 动态"]
+      summary: "动态详情 + 评论首页"
+      operationId: "AppMomentPostController_GET_api_v1_posts_id"
+      x-module: "M5"
+      x-auth: "level1"
+      x-idempotent: false
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "动态详情 + 评论首页"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/api/v1/posts/{id}/collects":
+    delete:
+      tags: ["M5 动态"]
+      summary: "取消收藏"
+      operationId: "AppMomentPostController_DELETE_api_v1_posts_id_collects"
+      x-module: "M5"
+      x-auth: "level2"
+      x-idempotent: false
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "取消收藏"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    post:
+      tags: ["M5 动态"]
+      summary: "收藏（需 L2）"
+      operationId: "AppMomentPostController_POST_api_v1_posts_id_collects"
+      x-module: "M5"
+      x-auth: "level2"
+      x-idempotent: false
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "收藏（需 L2）"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/api/v1/posts/{id}/comments":
+    get:
+      tags: ["M5 动态"]
+      summary: "评论列表（游标）"
+      operationId: "AppMomentPostController_GET_api_v1_posts_id_comments"
+      x-module: "M5"
+      x-auth: "level1"
+      x-idempotent: false
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "评论列表（游标）"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    post:
+      tags: ["M5 动态"]
+      summary: "评论（需 L2，进审核）"
+      operationId: "AppMomentPostController_POST_api_v1_posts_id_comments"
+      x-module: "M5"
+      x-auth: "level2"
+      x-idempotent: true
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: 客户端生成，重试必须沿用同一个值
+          schema:
+            type: string
+            maxLength: 32
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "评论（需 L2，进审核）"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/api/v1/posts/{id}/likes":
+    delete:
+      tags: ["M5 动态"]
+      summary: "取消点赞"
+      operationId: "AppMomentPostController_DELETE_api_v1_posts_id_likes"
+      x-module: "M5"
+      x-auth: "level2"
+      x-idempotent: false
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "取消点赞"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    post:
+      tags: ["M5 动态"]
+      summary: "点赞（需 L2，并发只 +1）"
+      operationId: "AppMomentPostController_POST_api_v1_posts_id_likes"
+      x-module: "M5"
+      x-auth: "level2"
+      x-idempotent: false
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "点赞（需 L2，并发只 +1）"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/api/v1/sessions":
+    get:
+      tags: ["M3 即时通讯"]
+      summary: "会话列表（含未读数）"
+      operationId: "AppImSessionController_GET_api_v1_sessions"
+      x-module: "M3"
+      x-auth: "bearer"
+      x-idempotent: false
+      responses:
+        '200':
+          description: "会话列表（含未读数）"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/api/v1/sessions/{id}":
+    get:
+      tags: ["M3 即时通讯"]
+      summary: "会话详情 + 成员"
+      operationId: "AppImSessionController_GET_api_v1_sessions_id"
+      x-module: "M3"
+      x-auth: "level2"
+      x-idempotent: false
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "会话详情 + 成员"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/api/v1/splits/{id}":
+    get:
+      tags: ["M4 交易"]
+      summary: "分摊单详情 + 各人确认状态"
+      operationId: "AppSplitController_GET_api_v1_splits_id"
+      x-module: "M4"
+      x-auth: "level2"
+      x-idempotent: false
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "分摊单详情 + 各人确认状态"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/api/v1/splits/{id}/confirmations":
+    post:
+      tags: ["M4 交易"]
+      summary: "分摊确认/拒绝（全员确认后拆 N 笔转账）"
+      operationId: "AppSplitController_POST_api_v1_splits_id_confirmations"
+      x-module: "M4"
+      x-auth: "level2"
+      x-idempotent: true
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: 客户端生成，重试必须沿用同一个值
+          schema:
+            type: string
+            maxLength: 32
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "分摊确认/拒绝（全员确认后拆 N 笔转账）"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/api/v1/splits/{id}/total":
+    post:
+      tags: ["M4 交易"]
+      summary: "填分摊总额（发起人）"
+      operationId: "AppSplitController_POST_api_v1_splits_id_total"
+      x-module: "M4"
+      x-auth: "level2"
+      x-idempotent: true
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: 客户端生成，重试必须沿用同一个值
+          schema:
+            type: string
+            maxLength: 32
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "填分摊总额（发起人）"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/api/v1/transfers":
+    get:
+      tags: ["M4 交易"]
+      summary: "转账列表（游标）"
+      operationId: "AppTransferController_GET_api_v1_transfers"
+      x-module: "M4"
+      x-auth: "level2"
+      x-idempotent: false
+      responses:
+        '200':
+          description: "转账列表（游标）"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    post:
+      tags: ["M4 交易"]
+      summary: "发起转账（准入判定 + 风控）"
+      operationId: "AppTransferController_POST_api_v1_transfers"
+      x-module: "M4"
+      x-auth: "level2"
+      x-idempotent: true
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: 客户端生成，重试必须沿用同一个值
+          schema:
+            type: string
+            maxLength: 32
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "发起转账（准入判定 + 风控）"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/api/v1/transfers/{no}":
+    get:
+      tags: ["M4 交易"]
+      summary: "转账详情（卡片渲染源）"
+      operationId: "AppTransferController_GET_api_v1_transfers_no"
+      x-module: "M4"
+      x-auth: "level2"
+      x-idempotent: false
+      parameters:
+        - name: no
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "转账详情（卡片渲染源）"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/api/v1/transfers/{no}/cancellation":
+    post:
+      tags: ["M4 交易"]
+      summary: "撤销（仅待到账）"
+      operationId: "AppTransferController_POST_api_v1_transfers_no_cancellation"
+      x-module: "M4"
+      x-auth: "level2"
+      x-idempotent: true
+      parameters:
+        - name: no
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: 客户端生成，重试必须沿用同一个值
+          schema:
+            type: string
+            maxLength: 32
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "撤销（仅待到账）"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/api/v1/transfers/{no}/receipt":
+    post:
+      tags: ["M4 交易"]
+      summary: "收款确认"
+      operationId: "AppTransferController_POST_api_v1_transfers_no_receipt"
+      x-module: "M4"
+      x-auth: "level2"
+      x-idempotent: true
+      parameters:
+        - name: no
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: 客户端生成，重试必须沿用同一个值
+          schema:
+            type: string
+            maxLength: 32
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "收款确认"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/api/v1/users/{id}/follows":
+    delete:
+      tags: ["M5 动态"]
+      summary: "取关"
+      operationId: "AppUserFollowController_DELETE_api_v1_users_id_follows"
+      x-module: "M5"
+      x-auth: "level2"
+      x-idempotent: false
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "取关"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    post:
+      tags: ["M5 动态"]
+      summary: "关注（需 L2）"
+      operationId: "AppUserFollowController_POST_api_v1_users_id_follows"
+      x-module: "M5"
+      x-auth: "level2"
+      x-idempotent: false
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "关注（需 L2）"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/api/v1/users/{id}/homepage":
+    get:
+      tags: ["M5 动态"]
+      summary: "主页渲染数据（配置 + 发布 + 二手）"
+      operationId: "AppHomepageController_GET_api_v1_users_id_homepage"
+      x-module: "M5"
+      x-auth: "level1"
+      x-idempotent: false
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "主页渲染数据（配置 + 发布 + 二手）"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/api/v1/value-added-orders":
+    post:
+      tags: ["M4 交易"]
+      summary: "增值服务订单（置顶/曝光）"
+      operationId: "AppMemberController_POST_api_v1_value-added-orders"
+      x-module: "M4"
+      x-auth: "level2"
+      x-idempotent: true
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: 客户端生成，重试必须沿用同一个值
+          schema:
+            type: string
+            maxLength: 32
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "增值服务订单（置顶/曝光）"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/api/v1/wallet":
+    get:
+      tags: ["M4 交易"]
+      summary: "我的钱包"
+      operationId: "AppWalletController_GET_api_v1_wallet"
+      x-module: "M4"
+      x-auth: "level2"
+      x-idempotent: false
+      responses:
+        '200':
+          description: "我的钱包"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/app-api/mate/auth/profile":
+    get:
+      tags: ["M1 用户认证"]
+      summary: "本人资料与等级"
+      operationId: "AppAuthController_GET_app-api_mate_auth_profile"
+      x-module: "M1"
+      x-auth: "level1"
+      x-idempotent: false
+      responses:
+        '200':
+          description: "本人资料与等级"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/app-api/mate/auth/registrations":
+    post:
+      tags: ["M1 用户认证"]
+      summary: "手机号注册(L1)"
+      operationId: "AppAuthController_POST_app-api_mate_auth_registrations"
+      x-module: "M1"
+      x-auth: "public"
+      x-idempotent: false
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "手机号注册(L1)"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/app-api/mate/auth/sessions":
+    post:
+      tags: ["M1 用户认证"]
+      summary: "登录签发令牌"
+      operationId: "AppAuthController_POST_app-api_mate_auth_sessions"
+      x-module: "M1"
+      x-auth: "public"
+      x-idempotent: false
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "登录签发令牌"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/app-api/mate/auth/sms-codes":
+    post:
+      tags: ["M1 用户认证"]
+      summary: "发送验证码"
+      operationId: "AppAuthController_POST_app-api_mate_auth_sms-codes"
+      x-module: "M1"
+      x-auth: "public"
+      x-idempotent: false
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "发送验证码"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/app-api/mate/auth/verifications":
+    post:
+      tags: ["M1 用户认证"]
+      summary: "提交实名(L2)/学校(L3)认证"
+      operationId: "AppAuthController_POST_app-api_mate_auth_verifications"
+      x-module: "M1"
+      x-auth: "level1"
+      x-idempotent: false
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "提交实名(L2)/学校(L3)认证"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/app-api/mate/demand/create":
+    post:
+      tags: ["M2 搭子匹配"]
+      summary: "发布需求单"
+      operationId: "AppDemandController_POST_app-api_mate_demand_create"
+      x-module: "M2"
+      x-auth: "level2"
+      x-idempotent: false
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "发布需求单"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/app-api/mate/demand/get":
+    get:
+      tags: ["M2 搭子匹配"]
+      summary: "需求详情"
+      operationId: "AppDemandController_GET_app-api_mate_demand_get"
+      x-module: "M2"
+      x-auth: "bearer"
+      x-idempotent: false
+      responses:
+        '200':
+          description: "需求详情"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/app-api/mate/demand/page":
+    get:
+      tags: ["M2 搭子匹配"]
+      summary: "需求广场"
+      operationId: "AppDemandController_GET_app-api_mate_demand_page"
+      x-module: "M2"
+      x-auth: "bearer"
+      x-idempotent: false
+      responses:
+        '200':
+          description: "需求广场"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/app-api/mate/demand/{id}/formation":
+    post:
+      tags: ["M2 搭子匹配"]
+      summary: "手动成团"
+      operationId: "AppDemandController_POST_app-api_mate_demand_id_formation"
+      x-module: "M2"
+      x-auth: "level2"
+      x-idempotent: false
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "手动成团"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/app-api/mate/demand/{id}/signups":
+    get:
+      tags: ["M2 搭子匹配"]
+      summary: "报名列表"
+      operationId: "AppDemandController_GET_app-api_mate_demand_id_signups"
+      x-module: "M2"
+      x-auth: "level2"
+      x-idempotent: false
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "报名列表"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    post:
+      tags: ["M2 搭子匹配"]
+      summary: "报名"
+      operationId: "AppDemandController_POST_app-api_mate_demand_id_signups"
+      x-module: "M2"
+      x-auth: "level2"
+      x-idempotent: false
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "报名"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/app-api/mate/demand/{id}/signups/{signupId}":
+    patch:
+      tags: ["M2 搭子匹配"]
+      summary: "审核报名(触发成团)"
+      operationId: "AppDemandController_PATCH_app-api_mate_demand_id_signups_signupId"
+      x-module: "M2"
+      x-auth: "level2"
+      x-idempotent: false
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: signupId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "审核报名(触发成团)"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/app-api/mate/match/location":
+    post:
+      tags: ["M2 搭子匹配"]
+      summary: "上报定位"
+      operationId: "AppMatchController_POST_app-api_mate_match_location"
+      x-module: "M2"
+      x-auth: "level2"
+      x-idempotent: false
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "上报定位"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/app-api/mate/match/nearby":
+    get:
+      tags: ["M2 搭子匹配"]
+      summary: "附近的人"
+      operationId: "AppMatchController_GET_app-api_mate_match_nearby"
+      x-module: "M2"
+      x-auth: "level2"
+      x-idempotent: false
+      responses:
+        '200':
+          description: "附近的人"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/app-api/mate/match/swipes":
+    post:
+      tags: ["M2 搭子匹配"]
+      summary: "滑动喜欢/跳过"
+      operationId: "AppMatchController_POST_app-api_mate_match_swipes"
+      x-module: "M2"
+      x-auth: "level2"
+      x-idempotent: false
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "滑动喜欢/跳过"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/app-api/mate/report/create":
+    post:
+      tags: ["M6 风控"]
+      summary: "提交举报"
+      operationId: "AppReportController_POST_app-api_mate_report_create"
+      x-module: "M6"
+      x-auth: "level2"
+      x-idempotent: false
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "提交举报"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  "/internal/v1/im/callback":
+    post:
+      tags: ["M3 即时通讯(内部)"]
+      summary: "发送前校验（allow）"
+      operationId: "InternalImController_POST_internal_v1_im_callback"
+      x-module: "M3"
+      x-auth: "internal"
+      x-idempotent: false
+      x-internal: true
+      parameters:
+        - name: X-Internal-Token
+          in: header
+          required: true
+          description: 内部接口共享密钥；配置为空时一律拒绝(1002)
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: "发送前校验（allow）"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+components:
+  schemas:
+    ApiResponse:
+      type: object
+      description: 成功失败同构；code=0 表示成功
+      required: [code, message, traceId]
+      properties:
+        code:
+          type: integer
+          description: 见 contract/error-codes.md，禁止新增
+        message:
+          type: string
+        traceId:
+          type: string
+        data:
+          description: 各接口字段以 /v3/api-docs 导出为准
+          nullable: true
