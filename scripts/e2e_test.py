@@ -235,34 +235,42 @@ os2 = req("GET", f"/api/v1/orders/{order_no}", token=tokB)
 check("同 event_id 重复回调仍只生效一次",
       ok2.get("code") == 0 and os2.get("data", {}).get("status") == 2, os2.get("data"))
 
-print("\n=== M5 内容社区（先审后发 + 互动 + 审核通过后可见） ===")
+print("\n=== M5 内容社区（机器初审 + 转人工 + 互动 + 主页） ===")
 p = req("POST", "/api/v1/posts", {"content": "求一起上自习的搭子", "images": ["moment/a.jpg"], "topicId": 1},
         tokA, headers={"Idempotency-Key": "e2e-post-1"})
-check("A 发动态进审核(auditStatus=0)", p.get("code") == 0 and p["data"]["auditStatus"] == 0, p)
+check("A 发干净动态直接通过(auditStatus=1)", p.get("code") == 0 and p["data"]["auditStatus"] == 1, p)
 post_id = p.get("data", {}).get("postId")
 
 pd = req("GET", f"/api/v1/posts/{post_id}", token=tokB)
-check("待审动态对 B 不可见(1004)", pd.get("code") == 1004, pd)
-pd_self = req("GET", f"/api/v1/posts/{post_id}", token=tokA)
-check("待审动态对作者可见", pd_self.get("code") == 0, pd_self)
+check("干净动态对 B 立即可见", pd.get("code") == 0, pd)
 
 feed = req("GET", "/api/v1/feeds?type=recommend&size=20", token=tokB)
-check("待审动态不出现在信息流", feed.get("code") == 0 and not any(
+check("干净动态直接进信息流", any(
     x["postId"] == post_id for x in feed.get("data", {}).get("list", [])), feed.get("data"))
 
+# 含禁词：不拒单，落库转人工，仅作者可见
+bad = req("POST", "/api/v1/posts", {"content": "想约的加微信私聊", "images": [], "topicId": 1},
+          tokA, headers={"Idempotency-Key": "e2e-post-hit-1"})
+check("含禁词转人工(auditStatus=3)", bad.get("code") == 0 and bad["data"]["auditStatus"] == 3, bad)
+hit_id = bad.get("data", {}).get("postId")
+hid = req("GET", f"/api/v1/posts/{hit_id}", token=tokB)
+check("转人工动态他人不可见(1004)", hid.get("code") == 1004, hid)
+hid_self = req("GET", f"/api/v1/posts/{hit_id}", token=tokA)
+check("转人工动态作者可见", hid_self.get("code") == 0, hid_self)
+
 q = req("GET", "/api/v1/admin/audit-queues", headers={"X-Internal-Token": "mida-internal-dev-token"})
-check("审核队列能查到待审动态", q.get("code") == 0 and any(
-    x["bizId"] == post_id for x in q.get("data", {}).get("list", [])), q.get("data"))
+check("审核队列含转人工、不含已放行", q.get("code") == 0
+      and any(x["bizId"] == hit_id for x in q.get("data", {}).get("list", []))
+      and not any(x["bizId"] == post_id for x in q.get("data", {}).get("list", [])), q.get("data"))
 q_deny = req("GET", "/api/v1/admin/audit-queues", headers={"X-Internal-Token": "wrong"})
 check("审核队列错误密钥被拒(1002)", q_deny.get("code") == 1002, q_deny)
 
-dis = req("PUT", f"/api/v1/admin/audit-queues/{post_id}?type=post", {"action": 1},
+dis = req("PUT", f"/api/v1/admin/audit-queues/{hit_id}?type=post", {"action": 1},
           headers={"X-Internal-Token": "mida-internal-dev-token"})
-check("审核通过", dis.get("code") == 0 and dis["data"]["updated"] is True, dis)
+check("人工通过转人工动态", dis.get("code") == 0 and dis["data"]["updated"] is True, dis)
 
-feed2 = req("GET", "/api/v1/feeds?type=recommend&size=20", token=tokB)
-check("审核通过后进入信息流", any(x["postId"] == post_id for x in feed2.get("data", {}).get("list", [])),
-      feed2.get("data"))
+hid2 = req("GET", f"/api/v1/posts/{hit_id}", token=tokB)
+check("人工通过后他人可见", hid2.get("code") == 0, hid2)
 
 lk1 = req("POST", f"/api/v1/posts/{post_id}/likes", None, tokB)
 check("B 点赞 likeCount=1", lk1.get("code") == 0 and lk1["data"]["likeCount"] == 1, lk1)
@@ -273,15 +281,10 @@ check("取消点赞归 0", lk3["data"]["likeCount"] == 0, lk3)
 
 ct = req("POST", f"/api/v1/posts/{post_id}/comments", {"content": "我也去"},
          tokB, headers={"Idempotency-Key": "e2e-comment-1"})
-check("评论进审核(auditStatus=0)", ct.get("code") == 0 and ct["data"]["auditStatus"] == 0, ct)
+check("干净评论直接通过(auditStatus=1)", ct.get("code") == 0 and ct["data"]["auditStatus"] == 1, ct)
 cd = req("GET", f"/api/v1/posts/{post_id}", token=tokA)
-check("评论未通过时不出现在评论列表", not any(
+check("评论立即可见", any(
     c["commentId"] == ct["data"]["commentId"] for c in cd.get("data", {}).get("comments", [])), cd.get("data"))
-req("PUT", f"/api/v1/admin/audit-queues/{ct['data']['commentId']}?type=comment", {"action": 1},
-    headers={"X-Internal-Token": "mida-internal-dev-token"})
-cd2 = req("GET", f"/api/v1/posts/{post_id}", token=tokA)
-check("评论通过后可见", any(
-    c["commentId"] == ct["data"]["commentId"] for c in cd2.get("data", {}).get("comments", [])), cd2.get("data"))
 
 fo = req("POST", f"/api/v1/users/{uidA}/follows", None, tokB)
 check("B 关注 A", fo.get("code") == 0 and fo["data"]["followed"] is True, fo)

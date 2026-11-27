@@ -39,7 +39,6 @@ import java.util.Set;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.mate.enums.ErrorCodeConstants.AUTH_LEVEL_INSUFFICIENT;
-import static cn.iocoder.yudao.module.mate.enums.ErrorCodeConstants.CONTENT_AUDIT_HIT;
 import static cn.iocoder.yudao.module.mate.enums.ErrorCodeConstants.IDEMPOTENT_DUPLICATE;
 import static cn.iocoder.yudao.module.mate.enums.ErrorCodeConstants.PARAM_INVALID;
 import static cn.iocoder.yudao.module.mate.enums.ErrorCodeConstants.RESOURCE_OWNER_MISMATCH;
@@ -103,7 +102,7 @@ public class MomentPostServiceImpl implements MomentPostService {
     public PublishResult publish(Long userId, PublishCmd cmd, String idempotencyKey) {
         assertLevel(userId, 2);
         validatePublish(cmd);
-        assertContentPass(cmd.content());
+        int auditStatus = auditVerdict(cmd.content());
         if (StrUtil.isBlank(idempotencyKey)) {
             throw exception(PARAM_INVALID);
         }
@@ -121,8 +120,10 @@ public class MomentPostServiceImpl implements MomentPostService {
                     .userId(userId)
                     .content(cmd.content())
                     .topicId(cmd.topicId())
-                    .auditStatus(AuditStatusEnum.PENDING.getStatus())
-                    .publishStatus(PublishStatusEnum.SELF_ONLY.getStatus())
+                    .auditStatus(auditStatus)
+                    .publishStatus(auditStatus == AuditStatusEnum.PASSED.getStatus()
+                            ? PublishStatusEnum.PUBLISHED.getStatus()
+                            : PublishStatusEnum.SELF_ONLY.getStatus())
                     .visibleScope(VisibleScopeEnum.PUBLIC.getStatus())
                     .build();
             momentPostMapper.insert(post);
@@ -201,7 +202,7 @@ public class MomentPostServiceImpl implements MomentPostService {
         validateComment(content);
         requireVisible(userId, postId);
         assertParentValid(postId, parentId);
-        assertContentPass(content);
+        int auditStatus = auditVerdict(content);
         if (StrUtil.isBlank(idempotencyKey)) {
             throw exception(PARAM_INVALID);
         }
@@ -220,7 +221,7 @@ public class MomentPostServiceImpl implements MomentPostService {
                     .userId(userId)
                     .parentId(parentId)
                     .content(content)
-                    .auditStatus(AuditStatusEnum.PENDING.getStatus())
+                    .auditStatus(auditStatus)
                     .build();
             momentCommentMapper.insert(comment);
             markIdempotent(key, comment.getCommentId());
@@ -372,10 +373,16 @@ public class MomentPostServiceImpl implements MomentPostService {
         }
     }
 
-    private void assertContentPass(String text) {
-        if (SensitiveWordService.AuditResult.HIT.equals(sensitiveWordService.match(text).verdict())) {
-            throw exception(CONTENT_AUDIT_HIT);
-        }
+    /**
+     * 机器初审（同步版）：命中敏感词转人工，未命中直接通过。
+     *
+     * 为什么不是"一律待审"：那样每一条干净内容都要人工点一次通过，信息流永远是空的；
+     * 也不是"命中直接拒"：用户看不到内容为什么发不出去，且违规内容落不到库里，人工无从追溯。
+     * 折中为"命中转人工"——内容落库、仅作者可见，等 #58 队列裁决。
+     */
+    private int auditVerdict(String text) {
+        boolean hit = SensitiveWordService.AuditResult.HIT.equals(sensitiveWordService.match(text).verdict());
+        return hit ? AuditStatusEnum.MANUAL.getStatus() : AuditStatusEnum.PASSED.getStatus();
     }
 
     private void assertLevel(Long userId, int required) {

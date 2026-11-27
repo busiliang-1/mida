@@ -118,15 +118,7 @@ class MomentPostServiceImplTest {
     }
 
     @Test
-    void publishSensitiveContentRejected() {
-        ServiceException ex = assertThrows(ServiceException.class, () -> momentPostService.publish(AUTHOR,
-                new MomentPostService.PublishCmd("想刷单的加微信", List.of(), 1), "key-2"));
-        assertEquals(4001, ex.getCode());
-        verify(momentPostMapper, never()).insert(any(MomentPostDO.class));
-    }
-
-    @Test
-    void publishLandsBothAuditAndPublishStatus() {
+    void publishAutoPassesWhenNoSensitiveWord() {
         insertAssignsId(POST_ID);
         when(valueOperations.get(anyString())).thenReturn(null);
         when(valueOperations.setIfAbsent(anyString(), anyString(), any())).thenReturn(true);
@@ -135,13 +127,13 @@ class MomentPostServiceImplTest {
                 new MomentPostService.PublishCmd("求搭子一起自习", List.of("moment/a.jpg", "moment/b.jpg"), 7),
                 "key-3");
 
-        // 待审阶段必须 pending + self_only：任何一个漏掉都会让待审内容对外可见
-        assertEquals(AuditStatusEnum.PENDING.getStatus(), result.auditStatus());
+        // 机器初审未命中即放行：两个状态必须同时推进，只改 audit 不改 publish 会导致内容仍不可见
+        assertEquals(AuditStatusEnum.PASSED.getStatus(), result.auditStatus());
         ArgumentCaptor<MomentPostDO> captor = ArgumentCaptor.forClass(MomentPostDO.class);
         verify(momentPostMapper).insert(captor.capture());
         MomentPostDO saved = captor.getValue();
-        assertEquals(AuditStatusEnum.PENDING.getStatus(), saved.getAuditStatus());
-        assertEquals(PublishStatusEnum.SELF_ONLY.getStatus(), saved.getPublishStatus());
+        assertEquals(AuditStatusEnum.PASSED.getStatus(), saved.getAuditStatus());
+        assertEquals(PublishStatusEnum.PUBLISHED.getStatus(), saved.getPublishStatus());
         assertEquals(7, saved.getTopicId());
 
         // 附件按 sort_no 递增落库，保证前端拿到稳定顺序
@@ -156,6 +148,23 @@ class MomentPostServiceImplTest {
         verify(eventPublisher).publishEvent(eventCaptor.capture());
         assertTrue(eventCaptor.getValue() instanceof MomentSubmittedEvent);
         assertEquals(MomentSubmittedEvent.TYPE_POST, ((MomentSubmittedEvent) eventCaptor.getValue()).bizType());
+    }
+
+    @Test
+    void publishWithSensitiveWordGoesManualInsteadOfRejecting() {
+        insertAssignsId(POST_ID);
+        when(valueOperations.get(anyString())).thenReturn(null);
+        when(valueOperations.setIfAbsent(anyString(), anyString(), any())).thenReturn(true);
+
+        MomentPostService.PublishResult result = momentPostService.publish(AUTHOR,
+                new MomentPostService.PublishCmd("想约的加微信私聊", null, null), "key-hit");
+
+        // 命中禁词不拒单：内容落库转人工，仅作者可见，等 #58 队列裁决
+        assertEquals(AuditStatusEnum.MANUAL.getStatus(), result.auditStatus());
+        ArgumentCaptor<MomentPostDO> captor = ArgumentCaptor.forClass(MomentPostDO.class);
+        verify(momentPostMapper).insert(captor.capture());
+        assertEquals(AuditStatusEnum.MANUAL.getStatus(), captor.getValue().getAuditStatus());
+        assertEquals(PublishStatusEnum.SELF_ONLY.getStatus(), captor.getValue().getPublishStatus());
     }
 
     @Test
@@ -294,13 +303,26 @@ class MomentPostServiceImplTest {
     }
 
     @Test
-    void commentSensitiveRejected() {
+    void commentSensitiveGoesManual() {
         MomentPostDO post = pendingPost();
         post.setPublishStatus(PublishStatusEnum.PUBLISHED.getStatus());
         when(momentPostMapper.selectById(POST_ID)).thenReturn(post);
-        ServiceException ex = assertThrows(ServiceException.class, () -> momentPostService.comment(
-                AUTHOR, POST_ID, "私聊加微信", null, "c-key"));
-        assertEquals(4001, ex.getCode());
+        when(valueOperations.get(anyString())).thenReturn(null);
+        when(valueOperations.setIfAbsent(anyString(), anyString(), any())).thenReturn(true);
+        doAnswer(inv -> {
+            MomentCommentDO c = inv.getArgument(0);
+            c.setCommentId(666L);
+            c.setCreateTime(LocalDateTime.now());
+            return 1;
+        }).when(momentCommentMapper).insert(any(MomentCommentDO.class));
+        when(authService.getUser(AUTHOR)).thenReturn(user(AUTHOR, 10));
+
+        MomentPostService.CommentItem item = momentPostService.comment(
+                AUTHOR, POST_ID, "私聊加微信", null, "c-key");
+
+        // 评论命中禁词同样不拒单，转人工后他人看不到
+        assertEquals(AuditStatusEnum.MANUAL.getStatus(), item.auditStatus());
+        verify(momentCommentMapper).insert(any(MomentCommentDO.class));
     }
 
     @Test
@@ -335,7 +357,7 @@ class MomentPostServiceImplTest {
         MomentPostService.CommentItem item = momentPostService.comment(AUTHOR, POST_ID, "一起吗", null, "c-key-2");
 
         assertEquals(555L, item.commentId());
-        assertEquals(AuditStatusEnum.PENDING.getStatus(), item.auditStatus());
+        assertEquals(AuditStatusEnum.PASSED.getStatus(), item.auditStatus());
         assertNotNull(item.createTime());
         verify(eventPublisher).publishEvent(any(MomentSubmittedEvent.class));
     }
