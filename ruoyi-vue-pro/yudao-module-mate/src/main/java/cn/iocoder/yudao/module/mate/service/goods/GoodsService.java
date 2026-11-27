@@ -25,6 +25,9 @@ public interface GoodsService {
 
     CursorPage<OrderItem> myOrders(Long userId, Integer role, String cursor, int size);
 
+    /** 某卖家在售的商品（M5 主页复用，只取在售，不暴露已售/已下架） */
+    List<GoodsItem> listOnSaleBySeller(Long sellerId, int limit);
+
     record PublishCmd(String title, String category, BigDecimal price, String description, List<String> images) {
     }
 

@@ -20,11 +20,18 @@ public interface GoodsItemMapper extends BaseMapperX<GoodsItemDO> {
                 .orderByDesc(GoodsItemDO::getGoodsId), limit);
     }
 
+    /** 某卖家在售商品（M5 主页用） */
+    default List<GoodsItemDO> selectOnSaleBySeller(Long sellerId, int limit) {
+        return selectListLimitN(new LambdaQueryWrapperX<GoodsItemDO>()
+                .eq(GoodsItemDO::getSellerId, sellerId)
+                .eq(GoodsItemDO::getStatus, 0)
+                .orderByDesc(GoodsItemDO::getGoodsId), limit);
+    }
+
     /**
      * 下单锁定：status + version 双条件，影响 0 行即"已被别人买走"。
      * 原生 SQL 必须显式带 deleted，@TableLogic 不会自动拼到 @Update 里。
-     */
-    @Update("UPDATE goods_item SET status = 1, version = version + 1, update_time = NOW() "
+     */    @Update("UPDATE goods_item SET status = 1, version = version + 1, update_time = NOW() "
             + "WHERE goods_id = #{goodsId} AND status = 0 AND version = #{version} AND deleted = b'0'")
     int lock(@Param("goodsId") Long goodsId, @Param("version") Integer version);
 

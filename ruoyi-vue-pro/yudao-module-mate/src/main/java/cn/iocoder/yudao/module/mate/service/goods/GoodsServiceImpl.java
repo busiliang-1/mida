@@ -213,6 +213,12 @@ public class GoodsServiceImpl implements GoodsService {
 
     // ========== 内部方法 ==========
 
+    @Override
+    public List<GoodsItem> listOnSaleBySeller(Long sellerId, int limit) {
+        int pageSize = limit <= 0 ? 10 : Math.min(limit, MAX_PAGE_SIZE);
+        return goodsItemMapper.selectOnSaleBySeller(sellerId, pageSize).stream().map(this::toItem).toList();
+    }
+
     private void assertLevel(Long userId, int required) {
         Integer level = authService.getAuthLevel(userId);
         if (level == null || level < required) {
