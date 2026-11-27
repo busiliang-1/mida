@@ -10,6 +10,7 @@ public interface ErrorCodeConstants {
 
     // ========== 通用 1001-1004 ==========
     ErrorCode PARAM_INVALID = new ErrorCode(1001, "参数校验失败");
+    ErrorCode UNAUTHORIZED = new ErrorCode(1002, "未登录或登录已过期");
     ErrorCode AUTH_LEVEL_INSUFFICIENT = new ErrorCode(1003, "认证等级不足");
     ErrorCode RESOURCE_OWNER_MISMATCH = new ErrorCode(1004, "权限不足或资源归属不符");
 
@@ -24,6 +25,9 @@ public interface ErrorCodeConstants {
 
     // ========== 内容 4001 ==========
     ErrorCode CONTENT_AUDIT_HIT = new ErrorCode(4001, "内容命中审核规则");
+
+    // ========== 支付 5001 ==========
+    ErrorCode PAY_SIGN_INVALID = new ErrorCode(5001, "支付回调验签失败");
 
     // ========== M1 认证 ==========
     ErrorCode AUTH_USER_NOT_EXISTS = new ErrorCode(1001001, "用户不存在");
